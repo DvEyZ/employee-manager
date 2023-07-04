@@ -1,0 +1,11 @@
+input[type=number] {
+    width: 3rem;
+}
+
+.filter-window {
+    margin: 10px;
+}
+
+.filter-window form div {
+    margin: 5px;
+}
