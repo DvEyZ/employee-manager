@@ -42,7 +42,9 @@ const COLUMNS = [
 export const App = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [displayedEmployees, setDisplayedEmployees] = useState<Employee[]>([]);
-    const [filters, setFilters] = useState<Filter[]>([]);
+    const [filters, setFilters] = useState<{
+        [key :string]: Filter[]
+    }>(Object.fromEntries(COLUMNS.map((c) => [c.columnName, []])));
     const [loaded, setLoaded] = useState<boolean>(false);
     const [page, setPage] = useState<number>(1);
 
@@ -75,15 +77,18 @@ export const App = () => {
     }
 
     const addFilter = (filter :Filter) => {
-        setFilters([
-            ...filters, 
-            filter
-        ]);
+        let ft = { ...filters };
+        ft[filter.getFieldName()].push(filter);
+        setFilters(ft);
+        console.log(filters);
         setPage(1);
     }
 
-    const removeFilter = (index :number) => {
-        setFilters(filters.filter((v,i) => i !== index));
+    const removeFilter = (index :number, column :string) => {
+        let ft = { ...filters };
+        ft[column] = (ft[column].filter((v,i) => i !== index)).slice();
+        setFilters(ft);
+        console.log(filters);
         setPage(1);
     };
 
@@ -98,8 +103,8 @@ export const App = () => {
     if(!loaded) return <>Loading...</>
 
     let emps = displayedEmployees.filter((v) => 
-        filters.every((f) => f.match(v))
-    )
+        Object.values(filters).every((fs) => fs.every((f) => f.match(v))
+    ))
 
     return (
         <div className='app'>
@@ -120,10 +125,10 @@ export const App = () => {
             <div className='filters'>
                 {
                     COLUMNS.map((col, i) => 
-                        <div className='filter-column'>
+                        <div key={i} className='filter-column'>
                             {
-                                filters.filter((v) => v.getFieldName() === col.columnName).map((f, i) => 
-                                    <FilterDisplay key={i} text={f.getDisplayString()} onRemove={() => {removeFilter(i)}}/>
+                                filters[col.columnName].map((f, i) => 
+                                    <FilterDisplay key={i} text={f.getDisplayString()} onRemove={() => {removeFilter(i, col.columnName)}}/>
                                 )
                             }
                         </div>
